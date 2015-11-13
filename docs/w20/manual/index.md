@@ -10,7 +10,163 @@ menu:
         weight: 10
 ---
 
-W20 Core provides the minimum requirements to run a W20 application, mainly: 
+This manual will provide you with a deeper understanding of the fundamentals of W20.
+
+# Fragments and configuration
+
+W20 and its applications are organized around the idea of **fragments**. 
+
+## What is a fragment ?
+
+Just like a body made of several organs each with their own purpose, 
+a W20 application is made of several fragments that brings different concerns to the application. 
+A fragment is a collection of web resources (JavaScript [AMD modules](http://en.wikipedia.org/wiki/Asynchronous_module_definition), stylesheets, HTML templates...)
+that often but not necessarily depends on each other. The dependency between modules inside a fragment is orchestrated by the use of 
+the [RequireJS](http://requirejs.org/) library. 
+Think of a fragment as a coherent set of resources linked together for the purpose of organization and reusability. 
+By including and configuring a fragment you can bring the corresponding aspect and/or asset to your web application without having to worry about
+the intrinsic details of the fragment itself.
+ 
+## Fragment manifest
+
+Each fragment contains a JSON manifest that serves as a descriptor for the fragment configuration. The fragment manifest has two main goals:
+
+1. To expose the available modules of the fragment and their available configuration options. It is important to understand that the fragment manifest does
+not configure the fragment. It exposes what configuration will be possible according to a configuration schema. In the next section we will see how to
+actually configure the fragment when you import it into your application manifest.
+2. To allow the declaration of additional RequireJS configuration. On application start, each RequireJS configuration of each fragments, if present, are merged
+ together.
+ 
+The properties of a fragment manifest are:
+
+* `id`: a mandatory string with no space which identifies the fragment.
+* `name`: an optional name for the fragment.
+* `description`: an optional description of the fragment.
+* `requireConfig`: an optional object with the properties of a RequireJS configuration object. In the example below we add a simple RequireJS configuration
+for module mapping. For an exhaustive list and description of the RequireJS configuration options, please have a look at its [API](http://requirejs.org/docs/api.html).
+```
+{
+    "id": "demo-fragment",
+    "requireConfig": {
+        "map": {
+           "*": {
+             "mappedModule": "path/to/module/to/map",
+        }
+    }
+}
+```
+* `modules`: an optional object whose keys are the name of the exposed modules of the fragment. The value of those keys is an object with
+the module path and the configuration schema. The configuration schema contains the name of the configuration properties available for the module. 
+In the example below we expose a module "demoModule" inside a fragment with id "demo-fragment" and a configuration property named "demoConfig" 
+of type string for the module demoModule.
+
+```
+{
+    "id": "demo-fragment",
+    "modules": {
+        "demoModule": {
+             "path": "{demo-fragment}/modules/demoModule",
+             "autoload" : true,
+             "configSchema": {
+                 "title": "Demo module configuration",
+                 "type": "object",
+                 "additionalProperties": false,
+                 "properties": {
+                     "demoConfig": {
+                         "description": "A description of the demoConfig property",
+                         "type": "string"
+                     }
+                 }
+             }
+        }
+    }
+}
+```
+There is a few additional things to note in this last example:
+
+* In the `path` property we used the fragment id enclosed in curly braces (`{demo-fragment}`). This alias is automatically registered based
+on the fragment id and points to the location of the fragment manifest (it is a RequireJS mapping). You can use this alias in all other fragments
+and in the application to refer to the fragment location.
+* The `autoload` attribute specify if the module should be loaded automatically or only if required by another module. By "required by another module", we refer
+to the AMD definition and the dependency management between modules as used in RequireJS (through the use of a `define` or `require` call). If not specified, the 
+module will not be autoloaded.
+* The `demoConfig` property has been specified as a string. This means that when the property will be given its value in the application manifest, passing a type
+other than a string will raise an error. The other type available are object, array, boolean and number.
+
+Now that we have a better understanding of the notion of fragment, we can proceed to the configuration step in which we actually include and configure those fragments
+in our application.
+
+## Configuration
+
+Application configuration happens in an application manifest. This manifest is generally named **w20.app.json** because in the absence of 
+a dynamically generated manifest, the framework will fall back to looking for a JSON file with this name at the application root.
+
+The role of the application manifest is to reference fragments through their manifest URL and configure them specifically for the application.
+
+### Fragment declaration
+
+To include a fragment in your application, specify the path of the fragment manifest as a key.  
+
+```
+{
+    "bower_components/w20/w20-core.w20.json": {}
+}
+```
+The `w20-core` fragment will be loaded with all its modules where the `autoload` property is true. Remember that an alias `{w20-core}` is now 
+pointing to `bower_components/w20/w20-core`, the location of the fragment.
+
+### Fragment configuration
+
+Declaring a fragment like above can sometimes be enough. However most of the time you will configure the fragment and its modules
+according to your need or because an explicit configuration value is required. To configure the modules of the fragment add a `modules` 
+section:
+
+    {
+        "bower_components/w20/w20-core.w20.json" : {
+            "modules": {
+                "application": {
+                    "id": "my-app"
+                }
+            }
+        }
+    }
+
+In this configuration, the `application` module of `w20-core` will be configured with the corresponding object (defining
+the unique identifier of the application in this case). This module is normally defined as automatically loaded so this
+definition will only serve to configure it. To load a module that is not automatically loaded without configuration, just 
+specify it with an empty object:
+ 
+    {
+        "bower_components/w20/w20-core.w20.json": {
+            "modules": {
+                "application": {
+                    "id": "my-app"
+                }
+            }
+        },
+        
+        "bower_components/other-fragment/other-fragment.w20.json": {
+            "modules": {
+                "my-module": {}
+            }
+        }
+    }
+
+{{% callout info %}}
+Note that:
+
+* If a configuration JSON schema is provided for a specific module in the fragment manifest, the configuration specified
+here will be validated against it.
+* If a default configuration is provided for a specific module in the fragment manifest, the configuration specified here
+will be merged with it, overriding it. If no default configuration is provided, the configuration is provided as-is to
+the module. 
+{{% /callout %}}
+
+
+# W20 core
+
+The core fragment of W20 is the most important fragment of the framework and the only one that is mandatory. 
+It provides the fundamental aspect of the framework, mainly: 
 
 * An [AMD](http://en.wikipedia.org/wiki/Asynchronous_module_definition) infrastructure through [RequireJS](http://requirejs.org/),
 * An MVC runtime through [AngularJS](https://angularjs.org/),
@@ -18,9 +174,11 @@ W20 Core provides the minimum requirements to run a W20 application, mainly:
 * A permission model which enables to reflect backend security, 
 * Extensive culture support.
 
-No graphical framework is provided in this fragment so it can serve as a base to build your own or to implement a 
-completely custom UI solution in a specific application. You may reserve this possibility for very specific purposes though,
-since W20 provide a complete UI solution based on Bootstrap in the W20 UI fragment.
+No graphical CSS framework is provided in the core fragment to let you free of this choice. However, you can simply add
+an appropriate fragment of w20 to start using framework such as [Twitter Bootstrap](http://getbootstrap.com/) or [Angular Material](https://material.angularjs.org/latest/).
+
+The rest of this manual will focus mainly on the core fragment. Additional fragments documentation can be found in the corresponding 
+section of the documentation.
 
 # Application loading
 
