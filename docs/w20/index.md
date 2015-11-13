@@ -67,12 +67,14 @@ minimalist master page in W20 would be :
     </body>
     </html>
 
+{{% callout info %}}
 **Things worth noticing :**
 
 * The `data-w20-app` attribute on the `html` tag that will load the configuration of your W20 application.
 * The `<script>` tag, where we reference [RequireJS](http://requirejs.org/) and instruct it to load W20.
 * A W20 application is also an [AngularJS](http://angularjs.org) application. Therefore you should add a `<div>` tag 
 with the `data-ng-view` attribute. This will include rendered templates into the master page.
+{{% /callout %}}
 
 ## The configuration file
 
@@ -123,7 +125,8 @@ The sample code below shows how to declare a fragment module :
             }
         }
     }
-    
+
+{{% callout info %}}
 **Things worth noticing :**
 
 * `{fragment-identifier}` is used by W20 as a placeholder to target the fragment path. This ensures paths are always 
@@ -133,6 +136,7 @@ applications
 * Fragments modules are [AMD compliant](http://requirejs.org/docs/whyamd.html#amd)
 * If a configuration JSON schema is provided for a specific module in the fragment manifest, the configuration specified
 here will be validated against it.
+{{% /callout %}}
 
 # How it works
 
