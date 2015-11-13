@@ -185,3 +185,8 @@ The following steps will guide you through the process :
     `grunt connect`
     
 7. Open your application in a web browser and that's it !
+
+<div class="pull-right margin-top-20">
+    <a href="manual" class="btn btn-u">Next: start reading the manual</a>
+</div>
+<div class="clearfix"></div>
